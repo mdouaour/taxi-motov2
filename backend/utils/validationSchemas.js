@@ -30,6 +30,14 @@ export const userUpdateSchema = z.object({
   role: z.enum(["Rider", "Driver", "Admin"]).optional(),
 });
 
+export const fareRuleSchema = z.object({
+  baseFare: z.number().positive("Base fare must be a positive number").optional(),
+  minFareDistance: z.number().positive("Minimum fare distance must be a positive number").optional(),
+  minFareAmount: z.number().positive("Minimum fare amount must be a positive number").optional(),
+  perKmRate: z.number().positive("Per km rate must be a positive number").optional(),
+  isActive: z.boolean().optional(),
+});
+
 export const rideCreationSchema = z.object({
   pickupLocation: z.object({
     type: z.literal("Point"),
