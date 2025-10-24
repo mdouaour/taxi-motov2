@@ -5,8 +5,8 @@ module.exports = {
   transform: {
     "^.+\\.js$": "babel-jest",
   },
-  // Ensure that all files, including those in node_modules, are transformed by babel-jest
   transformIgnorePatterns: [],
+  extensionsToTreatAsEsm: [".js"],
   moduleNameMapper: {
     "^(\.{1,2}/.*)\.js$": "$1",
   },
