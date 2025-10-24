@@ -38,6 +38,30 @@ export const fareRuleSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+export const createPromoCodeSchema = z.object({
+  code: z.string().min(1, "Promo code is required"),
+  discountType: z.enum(["percentage", "fixed_amount"], { required_error: "Discount type is required" }),
+  discountValue: z.number().positive("Discount value must be a positive number"),
+  expirationDate: z.string().datetime("Invalid date format"),
+  usageLimit: z.number().int().positive("Usage limit must be a positive integer").optional(),
+  userUsageLimit: z.number().int().positive("User usage limit must be a positive integer").optional(),
+  minRideAmount: z.number().nonnegative("Minimum ride amount cannot be negative").optional(),
+  applicableTo: z.array(z.string()).optional(), // Array of user IDs
+  isActive: z.boolean().optional(),
+});
+
+export const updatePromoCodeSchema = z.object({
+  code: z.string().min(1, "Promo code is required").optional(),
+  discountType: z.enum(["percentage", "fixed_amount"]).optional(),
+  discountValue: z.number().positive("Discount value must be a positive number").optional(),
+  expirationDate: z.string().datetime("Invalid date format").optional(),
+  usageLimit: z.number().int().positive("Usage limit must be a positive integer").optional(),
+  userUsageLimit: z.number().int().positive("User usage limit must be a positive integer").optional(),
+  minRideAmount: z.number().nonnegative("Minimum ride amount cannot be negative").optional(),
+  applicableTo: z.array(z.string()).optional(),
+  isActive: z.boolean().optional(),
+});
+
 export const rideCreationSchema = z.object({
   pickupLocation: z.object({
     type: z.literal("Point"),
