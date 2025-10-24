@@ -20,6 +20,16 @@ export const driverApplicationSchema = z.object({
   vehicleRegistrationNumber: z.string().min(1, "Vehicle registration number is required"),
 });
 
+export const userUpdateSchema = z.object({
+  name: z.string().min(3, "Name must be at least 3 characters long").optional(),
+  email: z.string().email("Invalid email address").optional(),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters long")
+    .optional(),
+  role: z.enum(["Rider", "Driver", "Admin"]).optional(),
+});
+
 export const rideCreationSchema = z.object({
   pickupLocation: z.object({
     type: z.literal("Point"),
