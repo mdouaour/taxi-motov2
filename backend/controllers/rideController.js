@@ -148,10 +148,26 @@ const acceptRide = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Delete a ride (for admin)
+// @route   DELETE /api/rides/:id
+// @access  Private/Admin
+const deleteRide = asyncHandler(async (req, res) => {
+  const ride = await Ride.findById(req.params.id);
+
+  if (ride) {
+    await ride.deleteOne();
+    res.json({ message: "Ride removed" });
+  } else {
+    res.status(404);
+    throw new Error("Ride not found");
+  }
+});
+
 export {
   createRide,
   getMyRides,
   getRideById,
   updateRideStatus,
   acceptRide,
+  deleteRide,
 };
