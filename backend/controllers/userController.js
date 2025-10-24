@@ -1,26 +1,32 @@
 import asyncHandler from "express-async-handler";
 import generateToken from "../utils/generateToken.js";
 import User from "../models/userModel.js";
+import { registerSchema, loginSchema } from "../utils/validationSchemas.js";
 
 // @desc    Auth user & get token
 // @route   POST /api/users/login
 // @access  Public
 const authUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = loginSchema.parse(req.body);
 
-  const user = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
-  if (user && (await user.matchPassword(password))) {
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id),
-    });
-  } else {
-    res.status(401);
-    throw new Error("Invalid email or password");
+    if (user && (await user.matchPassword(password))) {
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user._id),
+      });
+    } else {
+      res.status(401);
+      throw new Error("Invalid email or password");
+    }
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.errors ? error.errors[0].message : error.message);
   }
 });
 
@@ -28,33 +34,38 @@ const authUser = asyncHandler(async (req, res) => {
 // @route   POST /api/users
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, role } = req.body;
+  try {
+    const { name, email, password } = registerSchema.parse(req.body);
 
-  const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email });
 
-  if (userExists) {
-    res.status(400);
-    throw new Error("User already exists");
-  }
+    if (userExists) {
+      res.status(400);
+      throw new Error("User already exists");
+    }
 
-  const user = await User.create({
-    name,
-    email,
-    password,
-    role,
-  });
-
-  if (user) {
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id),
+    const user = await User.create({
+      name,
+      email,
+      password,
+      // Role is intentionally not taken from req.body; it defaults to 'Rider' in the schema
     });
-  } else {
+
+    if (user) {
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user._id),
+      });
+    } else {
+      res.status(400);
+      throw new Error("Invalid user data");
+    }
+  } catch (error) {
     res.status(400);
-    throw new Error("Invalid user data");
+    throw new Error(error.errors ? error.errors[0].message : error.message);
   }
 });
 
