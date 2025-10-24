@@ -3,47 +3,48 @@ import Ride from "../models/rideModel.js";
 import User from "../models/userModel.js";
 import Driver from "../models/driverModel.js";
 import Fare from "../models/fareModel.js";
+import { rideCreationSchema } from "../utils/validationSchemas.js";
 
 // @desc    Create a new ride request
 // @route   POST /api/rides
 // @access  Private/Rider
 const createRide = asyncHandler(async (req, res) => {
-  const { pickupLocation, dropoffLocation, distance } = req.body;
+  try {
+    const { pickupLocation, dropoffLocation, distance } = rideCreationSchema.parse(req.body);
 
-  if (!pickupLocation || !dropoffLocation || !distance) {
+    const fareRules = await Fare.findOne({ isActive: true });
+
+    if (!fareRules) {
+      res.status(404);
+      throw new Error("Fare rules not found");
+    }
+
+    let calculatedFare = 0;
+
+    if (distance < fareRules.minFareDistance) {
+      calculatedFare = fareRules.minFareAmount;
+    } else {
+      calculatedFare = fareRules.baseFare + (distance - fareRules.minFareDistance) * fareRules.perKmRate;
+    }
+
+    const ride = await Ride.create({
+      rider: req.user._id,
+      pickupLocation,
+      dropoffLocation,
+      distance,
+      fare: calculatedFare,
+      status: "pending",
+    });
+
+    if (ride) {
+      res.status(201).json(ride);
+    } else {
+      res.status(400);
+      throw new Error("Invalid ride data");
+    }
+  } catch (error) {
     res.status(400);
-    throw new Error("Please add all fields");
-  }
-
-  const fareRules = await Fare.findOne({ isActive: true });
-
-  if (!fareRules) {
-    res.status(404);
-    throw new Error("Fare rules not found");
-  }
-
-  let calculatedFare = 0;
-
-  if (distance < fareRules.minFareDistance) {
-    calculatedFare = fareRules.minFareAmount;
-  } else {
-    calculatedFare = fareRules.baseFare + (distance - fareRules.minFareDistance) * fareRules.perKmRate;
-  }
-
-  const ride = await Ride.create({
-    rider: req.user._id,
-    pickupLocation,
-    dropoffLocation,
-    distance,
-    fare: calculatedFare,
-    status: "pending",
-  });
-
-  if (ride) {
-    res.status(201).json(ride);
-  } else {
-    res.status(400);
-    throw new Error("Invalid ride data");
+    throw new Error(error.errors ? error.errors[0].message : error.message);
   }
 });
 
