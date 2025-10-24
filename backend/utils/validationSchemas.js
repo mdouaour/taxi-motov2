@@ -19,3 +19,17 @@ export const driverApplicationSchema = z.object({
   vehicleColor: z.string().min(1, "Vehicle color is required"),
   vehicleRegistrationNumber: z.string().min(1, "Vehicle registration number is required"),
 });
+
+export const rideCreationSchema = z.object({
+  pickupLocation: z.object({
+    type: z.literal("Point"),
+    coordinates: z.array(z.number()).length(2, "Coordinates must be a [longitude, latitude] array"),
+    address: z.string().min(1, "Pickup address is required"),
+  }),
+  dropoffLocation: z.object({
+    type: z.literal("Point"),
+    coordinates: z.array(z.number()).length(2, "Coordinates must be a [longitude, latitude] array"),
+    address: z.string().min(1, "Dropoff address is required"),
+  }),
+  distance: z.number().positive("Distance must be a positive number"),
+});
