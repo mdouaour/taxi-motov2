@@ -6,7 +6,6 @@ module.exports = {
     "^.+\\.js$": "babel-jest",
   },
   transformIgnorePatterns: [],
-  extensionsToTreatAsEsm: [".js"],
   moduleNameMapper: {
     "^(\.{1,2}/.*)\.js$": "$1",
   },
