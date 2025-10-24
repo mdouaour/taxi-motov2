@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
 import {
-  registerDriver,
+  applyForDriver,
   getDrivers,
   getDriverById,
   updateDriver,
@@ -9,7 +9,8 @@ import {
 } from "../controllers/driverController.js";
 import { protect, admin } from "../middlewares/authMiddleware.js";
 
-router.route("/").post(protect, admin, registerDriver).get(protect, admin, getDrivers);
+router.route("/").get(protect, admin, getDrivers);
+router.route("/apply").post(protect, applyForDriver);
 router
   .route("/:id")
   .get(protect, admin, getDriverById)

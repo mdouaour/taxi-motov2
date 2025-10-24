@@ -1,45 +1,43 @@
 import asyncHandler from "express-async-handler";
 import Driver from "../models/driverModel.js";
 import User from "../models/userModel.js";
+import { driverApplicationSchema } from "../utils/validationSchemas.js";
 
-// @desc    Register a new driver
-// @route   POST /api/drivers
-// @access  Private/Admin
-const registerDriver = asyncHandler(async (req, res) => {
-  const { userId, licenseNumber, vehicleModel, vehicleColor, vehicleRegistrationNumber } = req.body;
+// @desc    Apply to become a driver
+// @route   POST /api/drivers/apply
+// @access  Private (Rider)
+const applyForDriver = asyncHandler(async (req, res) => {
+  try {
+    const { licenseNumber, vehicleModel, vehicleColor, vehicleRegistrationNumber } = driverApplicationSchema.parse(req.body);
 
-  const user = await User.findById(userId);
+    const driverExists = await Driver.findOne({ user: req.user._id });
 
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found");
-  }
+    if (driverExists) {
+      res.status(400);
+      throw new Error("You have already applied to be a driver.");
+    }
 
-  if (user.role !== "Driver") {
+    const driver = await Driver.create({
+      user: req.user._id,
+      licenseNumber,
+      vehicleModel,
+      vehicleColor,
+      vehicleRegistrationNumber,
+      isVerified: false, // Initially not verified
+    });
+
+    if (driver) {
+      res.status(201).json({
+        message: "Driver application submitted successfully. Awaiting admin approval.",
+        driver,
+      });
+    } else {
+      res.status(400);
+      throw new Error("Invalid driver application data");
+    }
+  } catch (error) {
     res.status(400);
-    throw new Error("User is not a driver");
-  }
-
-  const driverExists = await Driver.findOne({ user: userId });
-
-  if (driverExists) {
-    res.status(400);
-    throw new Error("Driver already registered");
-  }
-
-  const driver = await Driver.create({
-    user: userId,
-    licenseNumber,
-    vehicleModel,
-    vehicleColor,
-    vehicleRegistrationNumber,
-  });
-
-  if (driver) {
-    res.status(201).json(driver);
-  } else {
-    res.status(400);
-    throw new Error("Invalid driver data");
+    throw new Error(error.errors ? error.errors[0].message : error.message);
   }
 });
 
@@ -100,6 +98,16 @@ const verifyDriver = asyncHandler(async (req, res) => {
     driver.isVerified = isVerified;
 
     const updatedDriver = await driver.save();
+
+    // If driver is verified, update the user's role to 'Driver'
+    if (isVerified) {
+      const user = await User.findById(updatedDriver.user);
+      if (user) {
+        user.role = "Driver";
+        await user.save();
+      }
+    }
+
     res.json(updatedDriver);
   } else {
     res.status(404);
@@ -108,7 +116,7 @@ const verifyDriver = asyncHandler(async (req, res) => {
 });
 
 export {
-  registerDriver,
+  applyForDriver,
   getDrivers,
   getDriverById,
   updateDriver,
