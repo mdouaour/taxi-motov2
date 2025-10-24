@@ -7,13 +7,30 @@ const promoCodeSchema = mongoose.Schema(
       required: true,
       unique: true,
     },
-    discount: {
+    discountType: {
+      type: String,
+      enum: ["percentage", "fixed_amount"],
+      required: true,
+    },
+    discountValue: {
       type: Number,
       required: true,
     },
     expirationDate: {
       type: Date,
       required: true,
+    },
+    usageLimit: {
+      type: Number,
+      default: 1,
+    },
+    userUsageLimit: {
+      type: Number,
+      default: 1,
+    },
+    minRideAmount: {
+      type: Number,
+      default: 0,
     },
     isActive: {
       type: Boolean,
