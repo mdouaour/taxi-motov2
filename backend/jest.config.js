@@ -7,5 +7,7 @@ module.exports = {
   },
   // Ensure that all files, including those in node_modules, are transformed by babel-jest
   transformIgnorePatterns: [],
+  moduleNameMapper: {
+    "^(\.{1,2}/.*)\.js$": "$1",
+  },
 };
-
