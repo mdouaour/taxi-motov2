@@ -47,6 +47,32 @@ const io = new Server(httpServer, {
 io.on("connection", (socket) => {
   console.log(`User connected with id: ${socket.id}`);
 
+  socket.on("join_ride_room", (rideId) => {
+    socket.join(rideId);
+    console.log(`User ${socket.id} joined ride room: ${rideId}`);
+  });
+
+  socket.on("send_message", async ({ rideId, senderId, message }) => {
+    try {
+      const ride = await Ride.findById(rideId);
+      if (ride) {
+        ride.messages.push({ sender: senderId, message });
+        await ride.save();
+        io.to(rideId).emit("receive_message", { sender: senderId, message, timestamp: new Date() });
+      } else {
+        console.error(`Ride with ID ${rideId} not found for message.`);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  });
+
+  socket.on("initiate_call", ({ rideId, callerId }) => {
+    console.log(`User ${callerId} initiating call in ride room: ${rideId}`);
+    // In a real application, this would involve WebRTC signaling
+    io.to(rideId).emit("receive_call", { callerId, rideId });
+  });
+
   socket.on("disconnect", () => {
     console.log(`User disconnected with id: ${socket.id}`);
   });
